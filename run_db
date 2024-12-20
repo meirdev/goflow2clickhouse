@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+docker run --rm -p 8123:8123 -p 9000:9000 -v $PWD/initdb:/docker-entrypoint-initdb.d clickhouse/clickhouse-server:24.12-alpine
