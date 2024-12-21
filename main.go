@@ -34,8 +34,7 @@ var (
 
 	Workers      = flag.Int("workers", 1, "Number of workers")
 	BatchSize    = flag.Int("batchsize", 10000, "Batch size")
-	BatchMaxTime = flag.Int("batchmaxtime", 10, "Max time in seconds to process a batch")
-	BatchTimeout = flag.Int("batchtimeout", 5, "Timeout to wait for new flows")
+	BatchMaxTime = flag.Int("batchmaxtime", 10, "Max time in seconds to wait for a batch to be filled")
 
 	MetricsAddr = flag.String("metrics.addr", ":8080", "Metrics address")
 	MetricsPath = flag.String("metrics.path", "/metrics", "Metrics path")
@@ -110,7 +109,6 @@ func (s *State) Close() {
 }
 
 func (s *State) PushFlows() {
-	batchTimeout := time.Duration(*BatchTimeout) * time.Second
 	batchMaxTime := time.Duration(*BatchMaxTime) * time.Second
 
 	for {
@@ -123,8 +121,6 @@ func (s *State) PushFlows() {
 	inner:
 		for len(flowsBatch) < *BatchSize {
 			select {
-			case <-time.After(batchTimeout):
-				break inner
 			case <-t.C:
 				break inner
 			case msg := <-flows:
