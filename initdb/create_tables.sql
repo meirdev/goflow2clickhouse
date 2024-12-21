@@ -180,20 +180,14 @@ CREATE VIEW IF NOT EXISTS pretty_flows_raw AS
         packets,
         src_addr,
         dst_addr,
-        transform(etype, [0x0800, 0x0806, 0x86DD], ['ipv4', 'arp', 'ipv6'], 'unknown') AS etype,
-        transform(proto, [0x01, 0x06, 0x11, 0x3a], ['icmp', 'tcp', 'udp', 'icmp'], 'unknown') AS proto,
+        transform(etype, [0x0800, 0x0806, 0x86DD], ['ipv4', 'arp', 'ipv6'], toString(etype)) AS etype,
+        transform(proto, [0x01, 0x06, 0x11, 0x3a], ['icmp', 'tcp', 'udp', 'icmp'], toString(proto)) AS proto,
         src_port,
         dst_port,
-        arrayMap(x -> transform(x, [1, 2, 4, 8, 16, 32, 64, 128, 256, 512], ['fin', 'syn', 'rst', 'psh', 'ack', 'urg', 'ecn', 'cwr', 'nonce', 'reserved'], 'unknown'), bitmaskToArray(tcp_flags)) as tcp_flags,
-        transform(forwarding_status, [0, 1, 2, 3], ['unknown', 'forwarded', 'dropped', 'consumed'], 'unknown') AS forwarding_status,
+        arrayMap(x -> transform(x, [1, 2, 4, 8, 16, 32, 64, 128, 256, 512], ['fin', 'syn', 'rst', 'psh', 'ack', 'urg', 'ecn', 'cwr', 'nonce', 'reserved'], toString(x)), bitmaskToArray(tcp_flags)) as tcp_flags,
+        transform(forwarding_status, [0, 1, 2, 3], ['unknown', 'forwarded', 'dropped', 'consumed'], toString(forwarding_status)) AS forwarding_status,
         fragment_offset > 0 AS is_fragment,
         src_prefix,
-        dst_prefix,
-        multiIf(
-            src_prefix != '' AND dst_prefix != '', 'internal',
-            src_prefix != '' AND dst_prefix = '', 'outgoing',
-            src_prefix = '' AND dst_prefix != '', 'incoming',
-            'unknown'
-        ) AS direction
+        dst_prefix
     FROM flows_raw
     ORDER BY time_received DESC;
