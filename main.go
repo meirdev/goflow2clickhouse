@@ -38,9 +38,9 @@ var (
 
 	MetricsAddr = flag.String("metrics.addr", ":8080", "Metrics address")
 	MetricsPath = flag.String("metrics.path", "/metrics", "Metrics path")
-
-	flows = make(chan *flowmessage.FlowMessage)
 )
+
+var flows = make(chan *flowmessage.FlowMessage)
 
 type FlowDb struct {
 	Type          int32  `ch:"type"`
