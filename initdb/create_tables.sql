@@ -177,7 +177,8 @@ CREATE VIEW IF NOT EXISTS flows_raw_pretty_view AS
         transform(forwarding_status, [0, 1, 2, 3], ['unknown', 'forwarded', 'dropped', 'consumed'], toString(forwarding_status)) AS forwarding_status,
         fragment_offset > 0 AS is_fragment,
         src_prefix,
-        dst_prefix
+        dst_prefix,
+        dictGetOrDefault('networks_dict', 'group_name', dst_prefix, '-') AS group_name
     FROM flows_raw
     ORDER BY time_received DESC;
 
