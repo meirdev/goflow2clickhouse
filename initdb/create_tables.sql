@@ -205,7 +205,7 @@ ORDER BY (time_received, key);
 
 CREATE MATERIALIZED VIEW attack_type_agg_mv TO attack_type_agg AS
     SELECT
-        toStartOfMinute(toDateTime(time_received)) AS time_received,
+        toDateTime(time_received) AS time_received,
         sum(bytes * sampling_rate) AS bytes,
         sum(packets * sampling_rate) AS packets,
         (dst_prefix, transform(proto, [0x01, 0x06, 0x11, 0x3a], [1, 2, 3, 1], 0)) AS key
@@ -214,7 +214,7 @@ CREATE MATERIALIZED VIEW attack_type_agg_mv TO attack_type_agg AS
     GROUP BY time_received, key
     UNION ALL
     SELECT
-        toStartOfMinute(toDateTime(time_received)) AS time_received,
+        toDateTime(time_received) AS time_received,
         sum(bytes * sampling_rate) AS bytes,
         sum(packets * sampling_rate) AS packets,
         (dst_prefix, 4) AS key
@@ -222,7 +222,7 @@ CREATE MATERIALIZED VIEW attack_type_agg_mv TO attack_type_agg AS
     WHERE proto = 0x06 AND bitTest(tcp_flags, 1)
     GROUP BY time_received, key;
 
-CREATE TABLE IF NOT EXISTS five_tuple_agg
+CREATE TABLE IF NOT EXISTS flow_host_client_agg
 (
     time_received DateTime,
 
@@ -233,19 +233,17 @@ CREATE TABLE IF NOT EXISTS five_tuple_agg
         dst_prefix String,
         src_addr String,
         dst_addr String,
-        src_port UInt32,
-        dst_port UInt32,
         proto UInt32
     )
 ) ENGINE = SummingMergeTree()
 ORDER BY (time_received, key);
 -- TTL time_received + INTERVAL 5 minute;
 
-CREATE MATERIALIZED VIEW five_tuple_agg_mv TO five_tuple_agg AS
+CREATE MATERIALIZED VIEW flow_host_client_agg_mv TO flow_host_client_agg AS
     SELECT
-        toStartOfMinute(toDateTime(time_received)) AS time_received,
+        toDateTime(time_received) AS time_received,
         sum(bytes * sampling_rate) AS bytes,
         sum(packets * sampling_rate) AS packets,
-        (dst_prefix, src_addr, dst_addr, src_port, dst_port, proto) AS key
+        (dst_prefix, src_addr, dst_addr, proto) AS key
     FROM flows_raw
     GROUP BY time_received, key;
